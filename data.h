@@ -8,11 +8,12 @@ using namespace cv;
 
 struct Data {
 	vector<Mat> sources;
+	vector<Vec2d> offsets;
 	Mat Draw;
 	vector<Mat> gradientXSources;
 	vector<Mat> gradientYSources;
-	int height, width;
-	Mat SourceConstraints; //Matrice de contraintes de source
+	int height, width; // height and width of result image.
+	Mat SourceConstraints; //Matrice de contraintes de source.
 	int selectSource;
     vector<Vec3b> colors;
 

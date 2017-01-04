@@ -5,6 +5,9 @@
 double dataPenalty(int alpha, int label, Data *D, int i, int j, INSIDE_MODE insideMode); 
 double interactionPenalty(int pi, int pj, int qi, int qj, Data *D, int labelP, int labelQ, OUTSIDE_MODE outsideMode);
 void computeGraph(Graph<double, double, double> &G, INSIDE_MODE insideMode, OUTSIDE_MODE outsideMode, const Mat &R0, Data *D, int alpha);
+bool static isInImage(int x, int y, int offsetX, int offsetY, const Mat &I) {
+	return (x - offsetX >= 0 && y - offsetY >= 0 && x - offsetX < I.rows && y - offsetY < I.cols);
+}
 
 Collage::Collage(Data* Dat) {
 	Collage::D = Dat;
@@ -24,17 +27,18 @@ int Collage::getImageWidth() {
  
 //alpha_expansion avec plus de deux sources
 void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMode) {
-
-	Mat R0(D->height, D->width, CV_8UC1);
+	//cout << "Computing photomontage" << endl;
+	/* Labels to be put on result image */
+	Mat resultLabel(D->height, D->width, CV_8UC1);
 	for (int i = 0; i < D->height; i++) {
 		for (int j = 0; j < D->width; j++) {
-			R0.at<uchar>(i, j) = 0;
+			resultLabel.at<uchar>(i, j) = 0;
 		}
 	}
 
 	int minCut = INT_MAX;
 	bool amelioration, skipZero = true;
-
+	/* Alpha expansion */ 
 	do {
 		amelioration = false;
 		for (int alpha = 0; alpha < D->sources.size(); alpha++) {
@@ -43,9 +47,12 @@ void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMo
 				continue;
 			}
 
-			Graph<double, double, double> G(3 * D->height * D->width - D->width - D->height, 2 * D->height * D->width - D->width - D->height);
-			computeGraph(G, insideMode, outsideMode, R0, D, alpha);
-
+			Graph<double, double, double> G(
+				3 * D->height * D->width - D->width - D->height,
+				2 * D->height * D->width - D->width - D->height);
+			//cout << "Computing graph..." << endl;
+			computeGraph(G, insideMode, outsideMode, resultLabel, D, alpha);
+			//cout << "Graph computed" << endl;
 			int flow = G.maxflow();
 			if (flow < minCut) {
 				amelioration = true;
@@ -55,7 +62,7 @@ void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMo
 			for (int i = 0; i < D->height; i++) {
 				for (int j = 0; j < D->width; j++) {
 					if (G.what_segment(D->width * i + j) == Graph<double, double, double>::SINK) {
-						R0.at<uchar>(i, j) = alpha;
+							resultLabel.at<uchar>(i, j) = alpha;
 					}
 				}
 			}
@@ -63,14 +70,17 @@ void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMo
 
 	} while (amelioration);
 
-	Mat R(D->height, D->width, CV_8UC3);
+	cout << "Alpha expansion" << endl;
+	/* Compute result image */ 
+	Mat resultImage(D->height, D->width, CV_8UC3);
 	for (int i = 0; i < D->height; i++) {
 		for (int j = 0; j < D->width; j++) {
 			for (int k = 0; k < D->sources.size(); k++) {
-				if (R0.at<uchar>(i, j) == k) {
-					R.at<Vec3b>(i, j) = D->sources[k].at<Vec3b>(i, j);
+				Vec2d offset = D->offsets[k];
+				if (resultLabel.at<uchar>(i, j) == k) {
+					resultImage.at<Vec3b>(i, j) = D->sources[k].at<Vec3b>(i - offset[0], j - offset[1]);
 					if (D->SourceConstraints.at<uchar>(i, j) == 255) {
-						D->Draw.at<Vec3b>(i, j) = (D->sources[k].at<Vec3b>(i, j) + D->colors[k % 7]) / 2;
+						D->Draw.at<Vec3b>(i, j) = (D->sources[k].at<Vec3b>(i - offset[0], j - offset[1]) + D->colors[k % 7]) / 2;
 					} else {
 						D->Draw.at<Vec3b>(i, j) = D->colors[k % 7];
 					}
@@ -81,12 +91,13 @@ void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMo
 	}
 
 	imshow("Image", D->Draw);
-	imshow("Photomontage", R);
+	imshow("Photomontage", resultImage);
 	cv::waitKey();
 }
 
-
+/* calcule la pénalité pour un pixel */
 double dataPenalty(int alpha, int label, Data *D, int i, int j, INSIDE_MODE insideMode) {
+	//cout << "computing dataPenalty" << endl;
   double imageConstraint = D->SourceConstraints.at<uchar>(i, j);
   switch(insideMode) {
   	case DESIGNATED_SOURCE:
@@ -99,7 +110,11 @@ double dataPenalty(int alpha, int label, Data *D, int i, int j, INSIDE_MODE insi
   }
 }
 
+/* calcule la pénalité d'interaction entre deux pixels P et Q */ 
 double interactionPenalty(int pi, int pj, int qi, int qj, Data *D, int labelP, int labelQ, OUTSIDE_MODE outsideMode) {
+  //cout << "computing interaction penalty" << endl;
+  Vec2d offsetP = D->offsets[labelP];
+  Vec2d offsetQ = D->offsets[labelQ];
   Mat SLP = D->sources[labelP];
   Mat SLQ = D->sources[labelQ];
   Mat GXLP = D->gradientXSources[labelP];
@@ -107,29 +122,33 @@ double interactionPenalty(int pi, int pj, int qi, int qj, Data *D, int labelP, i
   Mat GXLQ = D->gradientXSources[labelQ];
   Mat GYLQ = D->gradientYSources[labelQ];
   double termP, termQ, termPx, termPy, termQx, termQy;
-
+  if (!isInImage(pi, pj, offsetQ[0], offsetQ[1], SLQ) || !isInImage(qi, qj, offsetP[0], offsetP[1], SLP) ||
+  	!isInImage(pi, pj, offsetP[0], offsetP[1], SLP) || !isInImage(qi, qj, offsetQ[0], offsetQ[1], SLQ)) {
+  	return 0;
+  }
+  
   switch(outsideMode) {
   	case COLORS:
-  		termP = norm((Vec3d)SLP.at<Vec3b>(pi, pj)-(Vec3d)SLQ.at<Vec3b>(pi, pj));
-  		termQ = norm((Vec3d)SLP.at<Vec3b>(qi, qj)-(Vec3d)SLQ.at<Vec3b>(qi, qj));
+  //	cout << pi << ", " << pj << endl;
+  //	cout << "for colors" << pi - offsetP[0] << ", " << pj - offsetP[1] <<endl;
+  		termP = norm((Vec3d)SLP.at<Vec3b>(pi - offsetP[0], pj - offsetP[1])-(Vec3d)SLQ.at<Vec3b>(pi - offsetQ[0], pj - offsetQ[1])); 
+  		termQ = norm((Vec3d)SLP.at<Vec3b>(qi - offsetP[0], qj - offsetP[1])-(Vec3d)SLQ.at<Vec3b>(qi - offsetQ[0], qj - offsetQ[1])); 
   		return termP + termQ;
+
   	case GRADIENTS:
-  		termPx = norm(GXLP.at<Vec3d>(pi, pj)-GXLQ.at<Vec3d>(pi, pj));
-  		termPy = norm(GYLP.at<Vec3d>(pi, pj)-GYLQ.at<Vec3d>(pi, pj));
-  		termQx = norm(GXLP.at<Vec3d>(qi, qj)-GXLQ.at<Vec3d>(qi, qj));  	
-  		termQy = norm(GYLP.at<Vec3d>(qi, qj)-GYLQ.at<Vec3d>(qi, qj));
+  	//cout << "for gradients" << endl;
+  		termPx = norm(GXLP.at<Vec3d>(pi - offsetP[0], pj - offsetP[1])-GXLQ.at<Vec3d>(pi - offsetQ[0], pj - offsetQ[1]));
+  		termPy = norm(GYLP.at<Vec3d>(pi - offsetP[0], pj - offsetP[1])-GYLQ.at<Vec3d>(pi - offsetQ[0], pj - offsetQ[1]));
+  		termQx = norm(GXLP.at<Vec3d>(qi - offsetP[0], qj - offsetP[1])-GXLQ.at<Vec3d>(qi - offsetQ[0], qj - offsetQ[1]));  	
+  		termQy = norm(GYLP.at<Vec3d>(qi - offsetP[0], qj - offsetP[1])-GYLQ.at<Vec3d>(qi - offsetQ[0], qj - offsetQ[1]));
   		return sqrt(termPx * termPx + termPy * termPy)  + sqrt(termQx * termQx + termQy * termQy);
   	case COLORS_AND_GRADIENTS:
-  		termP = norm((Vec3d)SLP.at<Vec3b>(pi, pj)-(Vec3d)SLQ.at<Vec3b>(pi, pj));
-  		termQ = norm((Vec3d)SLP.at<Vec3b>(qi, qj)-(Vec3d)SLQ.at<Vec3b>(qi, qj));
-  		termPx = norm(GXLP.at<Vec3d>(pi, pj)-GXLQ.at<Vec3d>(pi, pj));
-  		termPy = norm(GYLP.at<Vec3d>(pi, pj)-GYLQ.at<Vec3d>(pi, pj));
-  		termQx = norm(GXLP.at<Vec3d>(qi, qj)-GXLQ.at<Vec3d>(qi, qj));  	
-  		termQy = norm(GYLP.at<Vec3d>(qi, qj)-GYLQ.at<Vec3d>(qi, qj));
-  		return termP + termQ + sqrt(termPx * termPx + termPy * termPy)  + sqrt(termQx * termQx + termQy * termQy);
+  		return interactionPenalty(pi, pj, qi, qj, D, labelP, labelQ, COLORS) +
+  			interactionPenalty(pi, pj, qi, qj, D, labelP, labelQ, GRADIENTS);
   }	
 }
 
+/*	Crée le graphe des flots pour une image  en fonction des modes */
 void computeGraph(Graph<double, double, double> &G, INSIDE_MODE insideMode, OUTSIDE_MODE outsideMode, const Mat &R0, Data *D, int alpha) {
 	G.add_node(D->height * D->width); //les premiers noeuds seront les pixels, les suivants les voisinages entre deux pixels
 	int middleNode = D->height * D->width;
@@ -138,9 +157,12 @@ void computeGraph(Graph<double, double, double> &G, INSIDE_MODE insideMode, OUTS
 		for (int j = 0; j < D->width; j++) {
 			double currentImage = R0.at<uchar>(i, j);
 			double capacityToPuits = dataPenalty(alpha, currentImage, D, i, j, insideMode);
-			double capacityToSource = dataPenalty(alpha, alpha, D, i, j, insideMode);
+			double capacityToSource = INT_MAX;
+			if (i - D->offsets[alpha][0] >= 0 && j - D->offsets[alpha][1] >= 0) {
+				capacityToSource = dataPenalty(alpha, alpha, D, i, j, insideMode);
+			}
 
-			G.add_tweights(D->width*i + j, capacityToSource, capacityToPuits);
+			G.add_tweights(D->width * i + j, capacityToSource, capacityToPuits);
 
 			if (i < D->height - 1) {
 				int currVoisin = R0.at<uchar>(i + 1, j);

@@ -26,7 +26,6 @@ void static onMouse(int event, int x, int y, int foo, void* p) {
 		circle(D->Draw, p0, 2, D->colors[D->selectSource], 2);
 		circle(D->SourceConstraints, p0, 2, D->selectSource, 2);
 		imshow(winName, D->Draw);
-		imshow("Contraintes", D->SourceConstraints);
 	}
 	else if (event == CV_EVENT_RBUTTONDOWN) {
 		D->selectSource++;
@@ -34,7 +33,7 @@ void static onMouse(int event, int x, int y, int foo, void* p) {
 			D->Draw = D->sources[D->selectSource].clone();
 			for (int i = 0; i < D->height; i++) {
 				for (int j = 0; j < D->width; j++) {
-					if (D->SourceConstraints.at<uchar>(i, j) != 255) {
+					if (D->SourceConstraints.at<uchar>(i,j) != 255) {
 						D->Draw.at<Vec3b>(i, j) = D->colors[D->SourceConstraints.at<uchar>(i, j)];
 					}
 				}
@@ -44,6 +43,7 @@ void static onMouse(int event, int x, int y, int foo, void* p) {
 		else {
 			setMouseCallback(winName, NULL, NULL);
 			computePhotomontage(D);
+			cout << "Photomontage computed." << endl;
 		}
 	}
 }
@@ -56,6 +56,7 @@ int main() {
 	D.sources = vector<Mat>(N);
 	D.gradientYSources = vector<Mat>(N);
 	D.gradientXSources = vector<Mat>(N);
+	D.offsets = vector<Vec2d>(N);
 
 	/*int N = 3;
 	D.sources[0] = imread("../riviere.jpg");
@@ -68,9 +69,10 @@ int main() {
 	D.sources[2] = imread("../famille3.jpg");
 	D.sources[3] = imread("../famille4.jpg");
 
+	/* Compute gradient images for all sources */
 	for (int i = 0; i < N; i ++) {
 		Mat I = D.sources[i];
-		int m=I.rows, n = I.cols;
+		int m = I.rows, n = I.cols;
 		Mat Gx(m, n, CV_64FC3);
 		Mat Gy(m, n, CV_64FC3);
 		computeGradient(I, &Gx, &Gy);
@@ -78,6 +80,14 @@ int main() {
 		D.gradientYSources[i] = Gy;
 	}
 
+		/* Define offsets for all sources */
+	for (int i = 0; i < N; i++) {
+		Vec2d offset = Vec2d(10 * i, 10 * i);
+		D.offsets[i] = offset;
+	}
+
+
+	/* Define result image and constraints associated */
 	D.height = D.sources[0].rows;
 	D.width = D.sources[0].cols;
 	D.SourceConstraints = Mat(D.height, D.width, CV_8UC1);
@@ -86,7 +96,6 @@ int main() {
 			D.SourceConstraints.at<uchar>(i, j) = 255;
 		}
 	}
-	imshow("Contraintes", D.SourceConstraints);
 
 	D.selectSource = 0;
 	D.Draw = D.sources[0].clone();
@@ -97,25 +106,21 @@ int main() {
 }
 
 void static computeGradient(const Mat &I, Mat *Gx, Mat *Gy) {
-	int m=I.rows, n = I.cols;
+	int m = I.rows, n = I.cols;
 	for (int i = 0; i < m; i++) {
         for (int j = 0; j < n; j++) {
             Vec3d gx, gy;
             if (i == 0 || i == m-1) {
             	gy = Vec3d(0, 0, 0);
-            }
-                
-            else {
+            } else {
             	gy = ((Vec3d)I.at<Vec3b>(i + 1, j) - (Vec3d)I.at<Vec3b>(i - 1, j)) / 2;
             }
                 
-            if (j==0 || j==n-1) {
+            if (j == 0 || j == n - 1) {
             	gx = Vec3d(0, 0, 0);
-            
             } else {
             	gx = ((Vec3d)I.at<Vec3b>(i,j+1)- (Vec3d)I.at<Vec3b>(i,j-1)) / 2;
             }
-
             Gx->at<Vec3d>(i, j) = gx;
             Gy->at<Vec3d>(i, j) = gy;
         }
