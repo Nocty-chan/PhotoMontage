@@ -23,7 +23,7 @@ void static onMouse(int event, int x, int y, int foo, void* p) {
 	Data* D = (Data*)p;
 	if (foo == CV_EVENT_FLAG_LBUTTON + CV_EVENT_MOUSEMOVE) {
 		Point p0(x, y);
-		circle(D->Draw, p0, 2, Scalar(0, 255, 0), 2);
+		circle(D->Draw, p0, 2, D->colors[D->selectSource], 2);
 		circle(D->SourceConstraints, p0, 2, D->selectSource, 2);
 		imshow(winName, D->Draw);
 		imshow("Contraintes", D->SourceConstraints);
@@ -35,7 +35,7 @@ void static onMouse(int event, int x, int y, int foo, void* p) {
 			for (int i = 0; i < D->height; i++) {
 				for (int j = 0; j < D->width; j++) {
 					if (D->SourceConstraints.at<uchar>(i, j) != 255) {
-						D->Draw.at<Vec3b>(i, j) = Vec3b(0, 0, 255);
+						D->Draw.at<Vec3b>(i, j) = D->colors[D->SourceConstraints.at<uchar>(i, j)];
 					}
 				}
 			}
@@ -52,15 +52,21 @@ int main() {
 
 	namedWindow(winName);
 	Data D;
-	int N = 3;
-
+	int N = 4;
 	D.sources = vector<Mat>(N);
 	D.gradientYSources = vector<Mat>(N);
 	D.gradientXSources = vector<Mat>(N);
 
+	/*int N = 3;
 	D.sources[0] = imread("../riviere.jpg");
 	D.sources[1] = imread("../maison.jpg");
 	D.sources[2] = imread("../cascade.jpg");
+	*/
+
+	D.sources[0] = imread("../famille1.jpg");
+	D.sources[1] = imread("../famille2.jpg");
+	D.sources[2] = imread("../famille3.jpg");
+	D.sources[3] = imread("../famille4.jpg");
 
 	for (int i = 0; i < N; i ++) {
 		Mat I = D.sources[i];

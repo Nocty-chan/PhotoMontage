@@ -69,13 +69,18 @@ void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMo
 			for (int k = 0; k < D->sources.size(); k++) {
 				if (R0.at<uchar>(i, j) == k) {
 					R.at<Vec3b>(i, j) = D->sources[k].at<Vec3b>(i, j);
+					if (D->SourceConstraints.at<uchar>(i, j) == 255) {
+						D->Draw.at<Vec3b>(i, j) = (D->sources[k].at<Vec3b>(i, j) + D->colors[k % 7]) / 2;
+					} else {
+						D->Draw.at<Vec3b>(i, j) = D->colors[k % 7];
+					}
 					break;
 				}
 			}
-
 		}
 	}
 
+	imshow("Image", D->Draw);
 	imshow("Photomontage", R);
 	cv::waitKey();
 }
