@@ -68,10 +68,10 @@ int main() {
 	D.sources[2] = imread("../cascade.jpg");
 	*/
 
-	D.sources[0] = imread("famille1.jpg");
-	D.sources[1] = imread("famille2.jpg");
-	D.sources[2] = imread("famille3.jpg");
-	D.sources[3] = imread("famille4.jpg");
+	D.sources[0] = imread("images/famille1.jpg");
+	D.sources[1] = imread("images/famille2.jpg");
+	D.sources[2] = imread("images/famille3.jpg");
+	D.sources[3] = imread("images/famille4.jpg");
 
 	/* Compute gradient images for all sources */
 	for (int i = 0; i < N; i ++) {
