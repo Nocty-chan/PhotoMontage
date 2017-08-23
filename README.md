@@ -23,11 +23,15 @@ This project was the final paired-project for the Computer Vision class (INF552)
 ### Family photo ###
 
 Initial photos:
+
+
 ![Photo 1](https://github.com/Nocty-chan/PhotoMontage/blob/master/images/famille1.jpg?raw=true)
 ![Photo 2](https://github.com/Nocty-chan/PhotoMontage/blob/master/images/famille2.jpg?raw=true)
 ![Photo 3](https://github.com/Nocty-chan/PhotoMontage/blob/master/images/famille3.jpg?raw=true)
 ![Photo 4](https://github.com/Nocty-chan/PhotoMontage/blob/master/images/famille1.jpg?raw=true)
 
 Result photos:
+
+
 ![Result](https://github.com/Nocty-chan/PhotoMontage/blob/master/results/composite-result-family.png?raw=true)
 ![Origin of pixels](https://github.com/Nocty-chan/PhotoMontage/blob/master/results/composite-origin-family.png?raw=true)
