@@ -1,1 +1,7 @@
-build/
+PROJET
+
+CMakeFiles/*
+*.cmake
+*.o
+Makefile/*
+CMakeCache.txt
