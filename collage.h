@@ -26,5 +26,9 @@ public:
 	int getImageHeight();
 	int getImageWidth();
 	void computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMode);
+
+	static bool isInImage(int x, int y, int offsetX, int offsetY, const Mat &I) {
+	return (x - offsetX >= 0 && y - offsetY >= 0 && x - offsetX < I.rows && y - offsetY < I.cols);
+}
 };
 

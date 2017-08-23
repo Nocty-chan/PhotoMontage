@@ -5,9 +5,7 @@
 double dataPenalty(int alpha, int label, Data *D, int i, int j, INSIDE_MODE insideMode); 
 double interactionPenalty(int pi, int pj, int qi, int qj, Data *D, int labelP, int labelQ, OUTSIDE_MODE outsideMode);
 void computeGraph(Graph<double, double, double> &G, INSIDE_MODE insideMode, OUTSIDE_MODE outsideMode, const Mat &R0, Data *D, int alpha);
-bool static isInImage(int x, int y, int offsetX, int offsetY, const Mat &I) {
-	return (x - offsetX >= 0 && y - offsetY >= 0 && x - offsetX < I.rows && y - offsetY < I.cols);
-}
+
 
 Collage::Collage(Data* Dat) {
 	Collage::D = Dat;
@@ -24,7 +22,7 @@ int Collage::getImageHeight() {
 int Collage::getImageWidth() {
 	return D->width;
 }
- 
+
 //alpha_expansion avec plus de deux sources
 void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMode) {
 	//cout << "Computing photomontage" << endl;
@@ -69,8 +67,7 @@ void Collage::computePhotomontage(INSIDE_MODE insideMode, OUTSIDE_MODE outsideMo
 		}
 
 	} while (amelioration);
-
-	cout << "Alpha expansion" << endl;
+	
 	/* Compute result image */ 
 	Mat resultImage(D->height, D->width, CV_8UC3);
 	for (int i = 0; i < D->height; i++) {
@@ -122,11 +119,11 @@ double interactionPenalty(int pi, int pj, int qi, int qj, Data *D, int labelP, i
   Mat GXLQ = D->gradientXSources[labelQ];
   Mat GYLQ = D->gradientYSources[labelQ];
   double termP, termQ, termPx, termPy, termQx, termQy;
-  if (!isInImage(pi, pj, offsetQ[0], offsetQ[1], SLQ) || !isInImage(qi, qj, offsetP[0], offsetP[1], SLP) ||
-  	!isInImage(pi, pj, offsetP[0], offsetP[1], SLP) || !isInImage(qi, qj, offsetQ[0], offsetQ[1], SLQ)) {
+  if (!Collage::isInImage(pi, pj, offsetQ[0], offsetQ[1], SLQ) || !Collage::isInImage(qi, qj, offsetP[0], offsetP[1], SLP) ||
+  	!Collage::isInImage(pi, pj, offsetP[0], offsetP[1], SLP) || !Collage::isInImage(qi, qj, offsetQ[0], offsetQ[1], SLQ)) {
   	return 0;
   }
-  
+
   switch(outsideMode) {
   	case COLORS:
   //	cout << pi << ", " << pj << endl;

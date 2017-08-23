@@ -30,9 +30,13 @@ void static onMouse(int event, int x, int y, int foo, void* p) {
 	else if (event == CV_EVENT_RBUTTONDOWN) {
 		D->selectSource++;
 		if (D->selectSource < D->sources.size()) {
-			D->Draw = D->sources[D->selectSource].clone();
+			Vec2d offset = D->offsets[D->selectSource];
+			D->Draw = D->sources[0].clone();
 			for (int i = 0; i < D->height; i++) {
 				for (int j = 0; j < D->width; j++) {
+					if (Collage::isInImage(i, j, offset[0], offset[1], D->sources[D->selectSource])) {
+						D->Draw.at<Vec3b>(i, j) = D->sources[D->selectSource].at<Vec3b>(i - offset[0], j - offset[1]);
+					}
 					if (D->SourceConstraints.at<uchar>(i,j) != 255) {
 						D->Draw.at<Vec3b>(i, j) = D->colors[D->SourceConstraints.at<uchar>(i, j)];
 					}
@@ -64,10 +68,10 @@ int main() {
 	D.sources[2] = imread("../cascade.jpg");
 	*/
 
-	D.sources[0] = imread("../famille1.jpg");
-	D.sources[1] = imread("../famille2.jpg");
-	D.sources[2] = imread("../famille3.jpg");
-	D.sources[3] = imread("../famille4.jpg");
+	D.sources[0] = imread("famille1.jpg");
+	D.sources[1] = imread("famille2.jpg");
+	D.sources[2] = imread("famille3.jpg");
+	D.sources[3] = imread("famille4.jpg");
 
 	/* Compute gradient images for all sources */
 	for (int i = 0; i < N; i ++) {
@@ -82,7 +86,7 @@ int main() {
 
 		/* Define offsets for all sources */
 	for (int i = 0; i < N; i++) {
-		Vec2d offset = Vec2d(10 * i, 10 * i);
+		Vec2d offset = Vec2d(0, 0);
 		D.offsets[i] = offset;
 	}
 
@@ -115,7 +119,7 @@ void static computeGradient(const Mat &I, Mat *Gx, Mat *Gy) {
             } else {
             	gy = ((Vec3d)I.at<Vec3b>(i + 1, j) - (Vec3d)I.at<Vec3b>(i - 1, j)) / 2;
             }
-                
+
             if (j == 0 || j == n - 1) {
             	gx = Vec3d(0, 0, 0);
             } else {

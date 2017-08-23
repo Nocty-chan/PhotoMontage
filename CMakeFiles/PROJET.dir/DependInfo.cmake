@@ -4,9 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/laetitia/workspace/3A/INF552/Project/collage.cpp" "/home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles/PROJET.dir/collage.cpp.o"
-  "/home/laetitia/workspace/3A/INF552/Project/main.cpp" "/home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles/PROJET.dir/main.cpp.o"
-  "/home/laetitia/workspace/3A/INF552/Project/maxflow/graph.cpp" "/home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles/PROJET.dir/maxflow/graph.cpp.o"
+  "/home/laetitia/workspace/3A/INF552/Project/collage.cpp" "/home/laetitia/workspace/3A/INF552/Project/CMakeFiles/PROJET.dir/collage.cpp.o"
+  "/home/laetitia/workspace/3A/INF552/Project/main.cpp" "/home/laetitia/workspace/3A/INF552/Project/CMakeFiles/PROJET.dir/main.cpp.o"
+  "/home/laetitia/workspace/3A/INF552/Project/maxflow/graph.cpp" "/home/laetitia/workspace/3A/INF552/Project/CMakeFiles/PROJET.dir/maxflow/graph.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

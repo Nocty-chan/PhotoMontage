@@ -51,7 +51,7 @@ EQUALS = =
 CMAKE_SOURCE_DIR = /home/laetitia/workspace/3A/INF552/Project
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/laetitia/workspace/3A/INF552/Project/build
+CMAKE_BINARY_DIR = /home/laetitia/workspace/3A/INF552/Project
 
 #=============================================================================
 # Targets provided globally by CMake.
@@ -80,9 +80,9 @@ rebuild_cache/fast: rebuild_cache
 
 # The main all target
 all: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles /home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles/progress.marks
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/laetitia/workspace/3A/INF552/Project/CMakeFiles /home/laetitia/workspace/3A/INF552/Project/CMakeFiles/progress.marks
 	$(MAKE) -f CMakeFiles/Makefile2 all
-	$(CMAKE_COMMAND) -E cmake_progress_start /home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles 0
+	$(CMAKE_COMMAND) -E cmake_progress_start /home/laetitia/workspace/3A/INF552/Project/CMakeFiles 0
 .PHONY : all
 
 # The main clean target

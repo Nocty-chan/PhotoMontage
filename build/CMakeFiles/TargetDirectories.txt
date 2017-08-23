@@ -1,3 +1,0 @@
-/home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles/edit_cache.dir
-/home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles/rebuild_cache.dir
-/home/laetitia/workspace/3A/INF552/Project/build/CMakeFiles/PROJET.dir
